@@ -1,15 +1,20 @@
-// src/components/BurgerIngredients/index.tsx
+// src/components/burger-ingredients/burger-ingredients.tsx
 import { useState, useRef, useEffect, FC } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSelector } from '../../services/store';
 import { TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
 
+import {
+  selectBuns,
+  selectMains,
+  selectSauces
+} from '../../features/ingredients/ingredientsSlice';
+
 export const BurgerIngredients: FC = () => {
-  const items = useSelector((s) => s.ingredients.items);
-  const buns = items.filter((i) => i.type === 'bun');
-  const mains = items.filter((i) => i.type === 'main');
-  const sauces = items.filter((i) => i.type === 'sauce');
+  const buns = useSelector(selectBuns);
+  const mains = useSelector(selectMains);
+  const sauces = useSelector(selectSauces);
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
   const titleBunRef = useRef<HTMLHeadingElement>(null);

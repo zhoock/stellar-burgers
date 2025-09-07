@@ -1,6 +1,9 @@
 import { FC } from 'react';
 
-import { Input, Button } from '@zlden/react-developer-burger-ui-components';
+import {
+  EmailInput,
+  Button
+} from '@zlden/react-developer-burger-ui-components';
 import styles from '../common.module.css';
 import { Link } from 'react-router-dom';
 import { PageUIProps } from '../common-type';
@@ -20,15 +23,11 @@ export const ForgotPasswordUI: FC<PageUIProps> = ({
         onSubmit={handleSubmit}
       >
         <div className='pb-6'>
-          <Input
-            type='email'
+          <EmailInput
             placeholder='Укажите e-mail'
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             name='email'
-            error={false}
-            errorText=''
-            size='default'
           />
         </div>
         <div className={`pb-6 ${styles.button}`}>

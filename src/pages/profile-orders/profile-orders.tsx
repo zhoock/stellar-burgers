@@ -8,23 +8,33 @@ import {
 } from '../../features/orders/ordersSlice';
 import { ProfileOrdersUI } from '@ui-pages';
 import { Preloader } from '../../components/ui';
+import {
+  fetchIngredients,
+  selectAllIngredients
+} from '../../features/ingredients/ingredientsSlice';
+import { selectIsAuth, selectIsInit } from '../../features/user/userSlice';
 
 export const ProfileOrders: FC = () => {
   const dispatch = useDispatch();
-
-  // чтобы дергать запрос только когда понятно, авторизованы мы или нет
-  const { user, isInit } = useSelector((s) => s.user);
 
   const orders = useSelector(selectProfileOrders);
   const loading = useSelector(selectProfileOrdersLoading);
   const error = useSelector(selectProfileOrdersError);
 
+  const isInit = useSelector(selectIsInit);
+  const isAuth = useSelector(selectIsAuth);
+  const ingredients = useSelector(selectAllIngredients);
+
   useEffect(() => {
-    // как только приложение инициализировалось и есть пользователь — тянем свежую историю
-    if (isInit && user) {
+    if (!ingredients.length) dispatch(fetchIngredients());
+  }, [dispatch, ingredients.length]);
+
+  useEffect(() => {
+    // Ждём, пока определится пользователь, и только если авторизован — тянем заказы
+    if (isInit && isAuth && !orders.length) {
       dispatch(fetchProfileOrders());
     }
-  }, [dispatch, isInit, user?.email]); // при смене пользователя подтянем его заказы
+  }, [dispatch, isInit, isAuth, orders.length]);
 
   if (!isInit || (loading && !orders.length)) return <Preloader />;
   if (error && !orders.length)

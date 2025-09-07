@@ -8,16 +8,23 @@ import {
 } from '../../features/feed/feedSlice';
 import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
+import {
+  fetchIngredients,
+  selectAllIngredients
+} from '../../features/ingredients/ingredientsSlice';
 
 export const Feed: FC = () => {
   const dispatch = useDispatch();
+
   const orders = useSelector(selectFeedOrders);
   const loading = useSelector(selectFeedLoading);
   const error = useSelector(selectFeedError);
+  const ingredients = useSelector(selectAllIngredients);
 
   useEffect(() => {
     if (!orders.length) dispatch(fetchFeed());
-  }, [dispatch, orders.length]);
+    if (!ingredients.length) dispatch(fetchIngredients());
+  }, [dispatch, orders.length, ingredients.length]);
 
   if (loading && !orders.length) return <Preloader />;
   if (error) return <div style={{ padding: 16 }}>{error}</div>;

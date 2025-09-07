@@ -1,4 +1,5 @@
-// src/components/BurgerIngredient/index.tsx
+// src/components/burger-ingredient/burger-ingredient.tsx
+
 import { FC, memo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDispatch } from '../../services/store';
@@ -11,15 +12,10 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
     const location = useLocation();
     const dispatch = useDispatch();
 
-    // const handleAdd = () => {
-    //   dispatch(addItem(ingredient));
-    // };
-
     const handleAdd = (e?: MouseEvent) => {
       e?.preventDefault();
       e?.stopPropagation();
       dispatch(addItem(ingredient));
-      // console.log('added', ingredient._id); // временно для проверки
     };
 
     return (

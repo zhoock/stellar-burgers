@@ -69,7 +69,7 @@ export const logoutThunk = createAsyncThunk('user/logout', async () => {
   await logoutApi();
   localStorage.removeItem('refreshToken');
   // "очистить" accessToken (если у setCookie есть опции expires — лучше выставить просрочку)
-  setCookie('accessToken', '');
+  setCookie('accessToken', '', { expires: -1 });
 });
 
 // ---------- SLICE ----------
