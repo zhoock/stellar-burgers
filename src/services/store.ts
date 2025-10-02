@@ -15,7 +15,7 @@ import ordersReducer from '../features/orders/ordersSlice';
 import orderReducer from '../features/order/orderSlice';
 import profileOrdersReducer from '../features/profileOrders/profileOrdersSlice';
 
-const rootReducer = combineReducers({
+export const rootReducer = combineReducers({
   user: userReducer, // ← ключ 'user' даёт state.user
   ingredients: ingredientsReducer,
   feed: feedReducer,

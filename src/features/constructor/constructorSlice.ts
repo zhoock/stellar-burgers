@@ -7,7 +7,7 @@ type ConstructorState = {
   ingredients: TConstructorIngredient[];
 };
 
-const initialState: ConstructorState = { bun: null, ingredients: [] };
+export const initialState: ConstructorState = { bun: null, ingredients: [] };
 
 const constructorSlice = createSlice({
   name: 'constructor',
