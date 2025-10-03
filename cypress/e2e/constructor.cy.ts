@@ -1,5 +1,31 @@
 /// <reference types="cypress" />
 
+/** ===== Типы фикстур ===== */
+type IngredientType = 'bun' | 'main' | 'sauce';
+
+interface Ingredient {
+  _id: string;
+  name: string;
+  type: IngredientType;
+  price: number;
+  image: string;
+  image_mobile: string;
+  image_large: string;
+  proteins: number;
+  fat: number;
+  carbohydrates: number;
+  calories: number;
+}
+
+interface IngredientsFixture {
+  data: Ingredient[];
+}
+
+interface OrderFixture {
+  order: { number: number };
+}
+
+/** ===== Маршруты ===== */
 const ING = '**/ingredients';
 const AUTH_USER = '**/auth/user';
 const ORDERS = '**/orders';
@@ -11,17 +37,26 @@ describe('Конструктор бургера', () => {
     );
   });
 
+  afterEach(() => {
+    // подчистим токены и хранилище
+    cy.clearCookies();
+    cy.clearLocalStorage();
+  });
+
   it('добавление ингредиента в конструктор', () => {
     cy.visit('/');
     cy.wait('@getIngredients');
 
-    cy.fixture('ingredients.json').then(({ data }) => {
-      const bun = data.find((i: any) => i.type === 'bun')!;
+    cy.fixture<IngredientsFixture>('ingredients.json').then(({ data }) => {
+      const bun = data.find((i) => i.type === 'bun');
+      if (!bun) throw new Error('В фикстуре нет булки');
+
       cy.contains('p', bun.name)
         .parents('li')
         .within(() => {
           cy.contains('button', 'Добавить').click();
         });
+
       cy.contains(`${bun.name} (верх)`).should('exist');
     });
   });
@@ -30,102 +65,107 @@ describe('Конструктор бургера', () => {
     cy.visit('/');
     cy.wait('@getIngredients');
 
-    cy.fixture('ingredients.json').then(({ data }) => {
-      const ing = data[0];
-
-      // открываем карточку
+    cy.fixture<IngredientsFixture>('ingredients.json').then(({ data }) => {
+      const ing: Ingredient = data[0];
       cy.contains('p', ing.name).click();
 
-      // Ждём либо модал, либо роут /ingredients/:id
+      // явно убеждаемся, что открыт именно этот ингредиент
       cy.location('pathname', { timeout: 6000 }).should(
-        'match',
-        /\/(ingredients\/|$)/
+        'include',
+        `/ingredients/${ing._id}`
       );
+      cy.contains('h3', ing.name).should('exist');
 
+      // закрываем: если модалка открыта — клик по оверлею, иначе это отдельная страница → назад
       cy.get('body').then(($body) => {
-        const hasModal = $body.find('[data-cy="modal"]').length > 0;
-        if (hasModal) {
-          cy.get('[data-cy="modal"]').should('be.visible');
-
-          // закрываем: клик по overlay (портал/сосед — берём широкий селектор)
-          cy.get('body')
-            .find('[class*="overlay"], .modal-overlay')
+        const hasOverlay =
+          $body.find('[class*="overlay"], .modal-overlay').length > 0;
+        if (hasOverlay) {
+          cy.get('[class*="overlay"], .modal-overlay')
             .first()
             .click('topLeft', { force: true });
-
-          cy.get('[data-cy="modal"]').should('not.exist');
         } else {
-          // открыто как отдельная страница — есть имя ингредиента
-          cy.contains('h3', ing.name).should('exist');
           cy.go('back');
         }
       });
 
-      // вернулись на главную
       cy.location('pathname').should('eq', '/');
     });
   });
 
   it('создание заказа: авторизован, бургер собран, показываем номер и очищаем конструктор', () => {
-    // авторизация и перехваты ДО визита
-    cy.clearCookies();
-    cy.clearLocalStorage();
-    cy.setCookie('accessToken', 'FAKE_ACCESS');
     cy.intercept('GET', AUTH_USER, { fixture: 'user.json' }).as('getUser');
     cy.intercept('POST', ORDERS, { fixture: 'order.json' }).as('createOrder');
 
-    cy.visit('/');
+    // Подставляем токены ДО инициализации приложения
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('refreshToken', 'FAKE_REFRESH');
+        win.document.cookie = 'accessToken=FAKE_ACCESS';
+      }
+    });
+
     cy.wait('@getIngredients');
     cy.wait('@getUser');
 
-    // собираем бургер: булка + 2 начинки
-    cy.fixture('ingredients.json').then(({ data }) => {
-      const bun = data.find((i: any) => i.type === 'bun')!;
-      const mains = data.filter((i: any) => i.type === 'main').slice(0, 2);
+    cy.fixture<IngredientsFixture>('ingredients.json').then(({ data }) => {
+      const bun = data.find((i) => i.type === 'bun');
+      if (!bun) throw new Error('В фикстуре нет булки');
+
+      const mains: Ingredient[] = data
+        .filter((i) => i.type === 'main')
+        .slice(0, 2);
 
       cy.contains('p', bun.name)
         .parents('li')
         .within(() => {
           cy.contains('button', 'Добавить').click();
         });
-      mains.forEach((m: any) => {
+
+      mains.forEach((m) => {
         cy.contains('p', m.name)
           .parents('li')
           .within(() => {
             cy.contains('button', 'Добавить').click();
           });
       });
+
+      // перед оформлением проверяем содержимое конструктора
+      cy.contains('button', 'Оформить заказ')
+        .parents('section')
+        .first()
+        .within(() => {
+          cy.contains(`${bun.name} (верх)`).should('exist');
+          mains.forEach((m) => cy.contains(m.name).should('exist'));
+          cy.contains(`${bun.name} (низ)`).should('exist');
+        });
     });
 
-    // кликаем оформить
     cy.contains('button', 'Оформить заказ').click();
 
-    // ждём POST /orders и проверяем тело запроса
+    // проверяем тело запроса без any
     cy.wait('@createOrder')
       .its('request.body')
-      .then((body: any) => {
-        expect(body.ingredients?.length || 0).to.be.greaterThan(0);
+      .then((body: { ingredients?: string[] }) => {
+        expect((body.ingredients ?? []).length).to.be.greaterThan(0);
       });
 
-    // проверяем номер заказа — либо в модалке, либо просто в DOM (на случай страницы)
-    cy.fixture('order.json').then((ord) => {
-      const numberText = String(ord.order.number);
-      cy.get('body').should('contain', numberText);
+    cy.fixture<OrderFixture>('order.json').then((ord) => {
+      cy.contains(String(ord.order.number)).should('exist');
     });
 
-    // пытаемся закрыть модалку, если она есть
+    // закрыть модалку (если открыта)
     cy.get('body').then(($body) => {
-      const hasModal = $body.find('[data-cy="modal"]').length > 0;
-      if (hasModal) {
-        cy.get('body')
-          .find('[class*="overlay"], .modal-overlay')
+      const hasOverlay =
+        $body.find('[class*="overlay"], .modal-overlay').length > 0;
+      if (hasOverlay) {
+        cy.get('[class*="overlay"], .modal-overlay')
           .first()
           .click('topLeft', { force: true });
-        cy.get('[data-cy="modal"]').should('not.exist');
+        cy.get('[class*="overlay"], .modal-overlay').should('not.exist');
       }
     });
 
-    // конструктор очищен
     cy.contains('Выберите булки').should('exist');
     cy.contains('Выберите начинку').should('exist');
   });
