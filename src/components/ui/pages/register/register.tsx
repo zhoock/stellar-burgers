@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import {
   Input,
   Button,
@@ -21,6 +21,7 @@ export const RegisterUI: FC<RegisterUIProps> = ({
   <main className={styles.container}>
     <div className={`pt-6 ${styles.wrapCenter}`}>
       <h3 className='pb-6 text text_type_main-medium'>Регистрация</h3>
+
       <form
         className={`pb-15 ${styles.form}`}
         name='register'
@@ -34,23 +35,23 @@ export const RegisterUI: FC<RegisterUIProps> = ({
               onChange={(e) => setUserName(e.target.value)}
               value={userName}
               name='name'
-              error={false}
-              errorText=''
-              size='default'
+              onPointerEnterCapture={() => {}}
+              onPointerLeaveCapture={() => {}}
             />
           </div>
+
           <div className='pb-6'>
             <Input
               type='email'
               placeholder='E-mail'
               onChange={(e) => setEmail(e.target.value)}
               value={email}
-              name={'email'}
-              error={false}
-              errorText=''
-              size={'default'}
+              name='email'
+              onPointerEnterCapture={() => {}}
+              onPointerLeaveCapture={() => {}}
             />
           </div>
+
           <div className='pb-6'>
             <PasswordInput
               onChange={(e) => setPassword(e.target.value)}
@@ -58,11 +59,13 @@ export const RegisterUI: FC<RegisterUIProps> = ({
               name='password'
             />
           </div>
+
           <div className={`pb-6 ${styles.button}`}>
             <Button type='primary' size='medium' htmlType='submit'>
               Зарегистрироваться
             </Button>
           </div>
+
           {errorText && (
             <p className={`${styles.error} text text_type_main-default pb-6`}>
               {errorText}
@@ -70,6 +73,7 @@ export const RegisterUI: FC<RegisterUIProps> = ({
           )}
         </>
       </form>
+
       <div className={`${styles.question} text text_type_main-default pb-6`}>
         Уже зарегистрированы?
         <Link to='/login' className={`pl-2 ${styles.link}`}>

@@ -31,6 +31,7 @@ export const ResetPasswordUI: FC<ResetPasswordUIProps> = ({
             name='password'
           />
         </div>
+
         <div className='pb-6'>
           <Input
             type='text'
@@ -38,22 +39,24 @@ export const ResetPasswordUI: FC<ResetPasswordUIProps> = ({
             onChange={(e) => setToken(e.target.value)}
             value={token}
             name='token'
-            error={false}
-            errorText=''
-            size='default'
+            onPointerEnterCapture={() => {}}
+            onPointerLeaveCapture={() => {}}
           />
         </div>
+
         <div className={`pb-6 ${styles.button}`}>
           <Button type='primary' size='medium' htmlType='submit'>
             Сохранить
           </Button>
         </div>
+
         {errorText && (
           <p className={`${styles.error} text text_type_main-default pb-6`}>
             {errorText}
           </p>
         )}
       </form>
+
       <div className={`${styles.question} text text_type_main-default pb-6`}>
         Вспомнили пароль?
         <Link to='/login' className={`pl-2 ${styles.link}`}>
